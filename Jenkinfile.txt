@@ -1,0 +1,82 @@
+pipeline {
+    agent none
+
+    environment {
+        ECR_URI      = ''
+        IMAGE_TAG    = 'latest'
+        CLUSTER_NAME = 'my-flask-cluster'
+        REGION       = 'ap-south-1'
+    }
+
+    stages {
+        stage('Git Clone') {
+            agent { label 'slave2' }
+            steps {
+                dir('flask_ecommerce_app_Dynamic') {
+                    git branch: 'main', url: 'https://github.com/ankitalodha05/PythonFlaskProjecteCoomerece.git'
+                }
+            }
+        }
+
+        stage('Terraform Init & Apply') {
+            steps {
+                dir('terraform') {
+                    sh 'terraform init'
+                    sh 'terraform apply -auto-approve'
+                }
+            }
+        }
+
+        stage('Get ECR URI') {
+            steps {
+                script {
+                    def ecrUri = sh(
+                        script: "cd terraform && terraform output -raw repository_url",
+                        returnStdout: true
+                    ).trim()
+                    env.ECR_URI = ecrUri
+                    echo "ECR URI is: ${env.ECR_URI}"
+                }
+            }
+        }
+
+        stage('Docker Build & Push') {
+            agent { label 'slave2' }
+            steps {
+                dir('flask_ecommerce_app_Dynamic/flask_ecommerce_app_Dynamic') {
+                    script {
+                        echo "Using ECR_URI: ${env.ECR_URI}"
+                        sh """
+                            echo "Login to ECR..."
+                            aws ecr get-login-password --region $REGION | docker login --username AWS --password-stdin ${env.ECR_URI}
+
+                            echo "Build Docker image..."
+                            docker build -t ${env.ECR_URI}:$IMAGE_TAG .
+
+                            echo "Push image to ECR..."
+                            docker push ${env.ECR_URI}:$IMAGE_TAG
+                        """
+                    }
+                }
+            }
+        }
+
+        stage('Deploy to EKS') {
+            agent { label 'slave2' }
+            steps {
+                dir('flask_ecommerce_app_Dynamic/flask_ecommerce_app_Dynamic') {
+                    script {
+                        sh """
+                            echo "Update kubeconfig for EKS..."
+                            aws eks update-kubeconfig --name $CLUSTER_NAME --region $REGION
+
+                            echo "Deploying to EKS..."
+                            kubectl apply -f deployment.yaml
+                            kubectl apply -f service.yaml
+                        """
+                    }
+                }
+            }
+        }
+    }
+}
