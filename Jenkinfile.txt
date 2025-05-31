@@ -1,5 +1,5 @@
 pipeline {
-    agent none
+    agent any
 
     environment {
         ECR_URI      = ''
@@ -9,41 +9,62 @@ pipeline {
     }
 
     stages {
-        stage('Git Clone') {
-            agent { label 'slave2' }
+        stage('Clean Workspace') {
             steps {
-                dir('flask_ecommerce_app_Dynamic') {
-                    git branch: 'main', url: 'https://github.com/ankitalodha05/PythonFlaskProjecteCoomerece.git'
-                }
+                deleteDir()
+            }
+        }
+
+        stage('Git Clone') {
+            steps {
+                // Clone into safe directory
+                sh 'git clone --branch main https://github.com/ankitalodha05/-Deploy-a-Python-Flask-App-to-AWS-EKS-using-CI-CD.git project-dir'
             }
         }
 
         stage('Terraform Init & Apply') {
             steps {
-                dir('terraform') {
-                    sh 'terraform init'
-                    sh 'terraform apply -auto-approve'
+                dir('project-dir/terraform') {
+                    script {
+                        sh """
+                            terraform init
+
+                            echo "Importing existing ECR repo if needed..."
+                            terraform state show module.ecr.aws_ecr_repository.repo || terraform import module.ecr.aws_ecr_repository.repo my-flask-repo
+
+                            echo "Checking if IAM role 'eks-cluster-role' exists..."
+                            if aws iam get-role --role-name eks-cluster-role > /dev/null 2>&1; then
+                              echo "IAM role exists. Importing into Terraform..."
+                              terraform state show module.eks.aws_iam_role.eks_role || terraform import module.eks.aws_iam_role.eks_role eks-cluster-role
+                            else
+                              echo "IAM role does not exist. Letting Terraform create it."
+                            fi
+
+                            terraform apply -auto-approve
+                        """
+                    }
                 }
             }
         }
 
         stage('Get ECR URI') {
             steps {
-                script {
-                    def ecrUri = sh(
-                        script: "cd terraform && terraform output -raw repository_url",
-                        returnStdout: true
-                    ).trim()
-                    env.ECR_URI = ecrUri
-                    echo "ECR URI is: ${env.ECR_URI}"
+                dir('project-dir/terraform') {
+                    script {
+                        def ecrUri = sh(
+                            script: "terraform output -raw repository_url",
+                            returnStdout: true
+                        ).trim()
+                        env.ECR_URI = ecrUri
+                        echo "ECR URI is: ${env.ECR_URI}"
+                    }
                 }
             }
         }
 
         stage('Docker Build & Push') {
-            agent { label 'slave2' }
             steps {
-                dir('flask_ecommerce_app_Dynamic/flask_ecommerce_app_Dynamic') {
+                dir('project-dir') {
                     script {
                         echo "Using ECR_URI: ${env.ECR_URI}"
                         sh """
@@ -62,13 +83,15 @@ pipeline {
         }
 
         stage('Deploy to EKS') {
-            agent { label 'slave2' }
             steps {
-                dir('flask_ecommerce_app_Dynamic/flask_ecommerce_app_Dynamic') {
+                dir('project-dir') {
                     script {
                         sh """
                             echo "Update kubeconfig for EKS..."
                             aws eks update-kubeconfig --name $CLUSTER_NAME --region $REGION
+
+                            echo "Injecting ECR URI into deployment.yaml..."
+                            sed -i "s|<ECR_IMAGE_PLACEHOLDER>|$ECR_URI:$IMAGE_TAG|g" deployment.yaml
 
                             echo "Deploying to EKS..."
                             kubectl apply -f deployment.yaml
