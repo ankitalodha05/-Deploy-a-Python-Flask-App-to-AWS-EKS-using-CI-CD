@@ -4,7 +4,6 @@ module "eks_managed_node_group" {
 
   cluster_name    = var.cluster_name
   cluster_version = var.cluster_version
-  vpc_id          = var.vpc_id
   subnet_ids      = var.subnet_ids
 
   name            = "flask-node-group"
