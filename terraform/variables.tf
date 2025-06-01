@@ -82,3 +82,7 @@ variable "iam_role_name" {
   default     = "eks-flask-node-group-role"
 }
 
+variable "cluster_service_cidr" {
+  description = "CIDR range for Kubernetes service IPs"
+  type        = string
+}
