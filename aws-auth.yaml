@@ -5,7 +5,8 @@ metadata:
   namespace: kube-system
 data:
   mapRoles: |
-    - rolearn: arn:aws:iam::160885291806:role/ec2-administator-role
-      username: ec2-admin
+    - rolearn: arn:aws:iam::160885291806:role/eks-flask-node-group-role-20250601154821319300000001
+      username: system:node:{{EC2PrivateDNSName}}
       groups:
-        - system:masters
+        - system:bootstrappers
+        - system:nodes
