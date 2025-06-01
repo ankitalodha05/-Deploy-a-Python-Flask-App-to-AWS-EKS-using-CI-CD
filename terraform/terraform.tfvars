@@ -18,3 +18,4 @@ ami_type          = "AL2_x86_64"
 create_iam_role   = true
 iam_role_name     = "eks-flask-node-group-role"
 
+cluster_service_cidr = "172.20.0.0/16"
