@@ -1,1 +1,0 @@
-git --version && docker --version && terraform version && kubectl version --client && eksctl version && systemctl is-active --quiet jenkins && echo "Jenkins is running"
