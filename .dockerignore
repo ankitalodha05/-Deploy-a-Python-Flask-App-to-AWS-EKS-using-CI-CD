@@ -1,8 +1,0 @@
-.terraform/
-*.tfstate
-*.tfstate.backup
-*.log
-*.zip
-*.tar
-*.gz
-.aws/
