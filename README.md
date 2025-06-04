@@ -93,7 +93,7 @@ tools Installation
 
 A Jenkins server was provisioned on an Ubuntu EC2 instance. After launching the instance, we uploaded and executed a shell script named install_dev_tools.sh. This script installs all required tools and dependencies for Jenkins-based DevOps automation.
 
-Tools installed by the script:
+### Devops Tools installed by the script:
 
 
 Docker
