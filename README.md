@@ -4,75 +4,98 @@
 
 ### **Overview**
 
-This project automates the deployment of a Python Flask application to an Amazon EKS (Elastic Kubernetes Service) cluster using Jenkins for CI/CD, Terraform for infrastructure provisioning, and Docker for containerization.
+This project automates the full lifecycle of deploying a Python Flask application to AWS Elastic Kubernetes Service (EKS) using Jenkins for CI/CD orchestration, Terraform for Infrastructure as Code (IaC), Docker for containerization, and Kubernetes for container orchestration.
 
 ---
 
-### **Components**
+### **Architecture Diagram**
 
-* **Jenkins**: Used for automating the build, deploy, and infrastructure steps.
-* **Terraform**: Infrastructure as Code (IaC) tool used to provision AWS resources such as VPC, Subnets, ECR, IAM, and EKS.
-* **AWS Services**:
-
-  * VPC (with public/private subnets, NAT, IGW)
-  * ECR (Elastic Container Registry)
-  * EKS (Elastic Kubernetes Service)
-  * IAM Roles and Policies
-* **Docker**: To containerize the Flask application.
-* **Kubernetes**: For container orchestration and deployment.
+```plaintext
++---------------------+      +--------------------+      +-------------------+
+|     GitHub Repo     | ---> |     Jenkins CI     | ---> |     AWS ECR       |
++---------------------+      +--------------------+      +-------------------+
+                                         |                      |
+                                         v                      v
+                                 +---------------+      +------------------+
+                                 |   Terraform   | ---> |   AWS Resources  |
+                                 +---------------+      |   (EKS, VPC, etc)|
+                                                           +------------------+
+                                                                |
+                                                                v
+                                                      +----------------------+
+                                                      | Kubernetes (EKS)     |
+                                                      | Flask App Deployed   |
+                                                      +----------------------+
+```
 
 ---
 
-### **Pipeline Stages**
+### **Tools & Services Used**
+
+* **Jenkins**: Orchestrates CI/CD pipeline.
+* **Terraform**: Provisions infrastructure (VPC, Subnets, ECR, EKS).
+* **AWS Services**: EKS, VPC, ECR, IAM, NAT Gateway, Internet Gateway, Subnets.
+* **Docker**: Containerizes the Flask application.
+* **Kubernetes**: Deploys and manages the container.
+* **GitHub**: Version control repository for Flask app and Terraform code.
+
+---
+
+### **Pipeline Stages (Detailed)**
 
 1. **Checkout Source Code**
 
-   * Jenkins checks out the code from the GitHub repository:
+   * Jenkins fetches code from GitHub repository:
 
      ```
      https://github.com/ankitalodha05/-Deploy-a-Python-Flask-App-to-AWS-EKS-using-CI-CD
-
      ```
 
 2. **Clean Workspace**
 
-   * Cleans Jenkins workspace using `deleteDir()`.
+   * Uses `deleteDir()` in Jenkins to ensure a clean build environment.
 
-3. **Terraform Init & Apply**
+3. **Terraform Initialization and Apply**
 
-   * Initializes Terraform and applies all configuration files to:
+   * `terraform init` initializes Terraform providers and backends.
+   * `terraform apply -auto-approve` provisions:
 
-     * Provision VPC, Subnets, Internet Gateway, NAT Gateway, Route Tables
-     * Create IAM Roles for EKS cluster and node group
-     * Deploy EKS cluster and node group
-     * Create ECR repository
-     * Configure `aws-auth` and `kubeconfig`
+     * A VPC with 4 subnets (2 public, 2 private)
+     * Route tables, NAT gateway, and Internet gateway
+     * IAM roles for EKS cluster and nodes
+     * ECR repository
+     * EKS cluster with managed node group
+     * Configures kubeconfig and aws-auth
 
 4. **Fetch ECR URI**
 
-   * Extracts ECR URI using `terraform output` and stores it in a variable.
+   * Extracts output `ecr_repository_url` using:
 
-5. **Docker Build & Push**
+     ```bash
+     terraform output -raw ecr_repository_url
+     ```
 
-   * Builds the Docker image from Flask source
-   * Tags it with the ECR URI
-   * Logs into ECR and pushes the image to the repository
+5. **Docker Image Build & Push**
+
+   * Jenkins builds image using Dockerfile in `flaskapp/`.
+   * Tags the image with the ECR repository URL.
+   * Logs into ECR using AWS CLI and pushes the image.
 
 6. **Deploy to EKS**
 
-   * Updates kubeconfig for the EKS cluster
-   * Uses `kubectl` to apply Kubernetes deployment and service manifests
-   * Updates the deployment.yaml file with the actual ECR image URI
+   * Copies `deployment-template.yaml` to `deployment.yaml`
+   * Replaces placeholder with actual ECR image URI using `sed`
+   * Deploys using `kubectl apply -f deployment.yaml` and `service.yaml`
 
 7. **Post Actions**
 
-   * Logs the pipeline success message
+   * Pipeline logs completion message on successful deployment.
 
 ---
 
-### **Folder Structure**
+### **Directory Structure**
 
-```
+```plaintext
 Flask-App-to-AWS-EKS/
 │
 ├── terraform/
@@ -97,30 +120,50 @@ Flask-App-to-AWS-EKS/
 
 ---
 
-### **Key Outputs**
+### **Key Configuration Details**
 
-* **ECR Repository URL**: `160885291806.dkr.ecr.ap-south-1.amazonaws.com/my-flask-repo`
-* **EKS Cluster Name**: `my-flask-cluster`
+* **Cluster Name**: `my-flask-cluster`
 * **Node Group Name**: `my-flask-cluster-nodegroup`
-* **Docker Image**: `my-flask-repo:latest`
+* **Docker Image Name**: `my-flask-repo:latest`
+* **ECR URI**: `160885291806.dkr.ecr.ap-south-1.amazonaws.com/my-flask-repo`
+
+---
+
+### **Infrastructure Summary**
+
+| Component     | Resource Type                | Details                                  |
+| ------------- | ---------------------------- | ---------------------------------------- |
+| VPC           | aws\_vpc                     | 10.0.0.0/16                              |
+| Subnets       | aws\_subnet (public/private) | 2 public, 2 private                      |
+| IGW           | aws\_internet\_gateway       | Enables internet access                  |
+| NAT Gateway   | aws\_nat\_gateway            | Allows private subnet access to internet |
+| IAM Roles     | aws\_iam\_role               | For EKS cluster and worker nodes         |
+| EKS Cluster   | aws\_eks\_cluster            | Kubernetes control plane                 |
+| EKS Nodegroup | aws\_eks\_node\_group        | Worker nodes using t2.micro instances    |
+| ECR           | aws\_ecr\_repository         | Container registry                       |
 
 ---
 
 ### **Technologies Used**
 
-* **AWS**: EKS, ECR, IAM, VPC
-* **Jenkins**: Automation and CI/CD
-* **Terraform**: Infrastructure as Code
-* **Docker**: Containerization
-* **Python (Flask)**: Backend web application
-* **Kubernetes**: Deployment orchestration
+* **CI/CD**: Jenkins
+* **Infrastructure**: Terraform
+* **Cloud**: AWS (EKS, IAM, VPC, ECR)
+* **Containerization**: Docker
+* **Application**: Flask (Python)
+* **Orchestration**: Kubernetes (kubectl)
+
+---
+
+### **Benefits & Improvements**
+
+* 🔄 **Fully automated** CI/CD for containerized applications
+* 📦 **Reusable Terraform modules** for infrastructure provisioning
+* 🚀 **Rapid deployment** and scaling with EKS
+* ✅ **Standardized workflows** using Jenkins pipeline
 
 ---
 
 ### **Conclusion**
 
-This project demonstrates an end-to-end DevOps workflow for deploying a containerized Flask application to AWS using modern tools and infrastructure-as-code practices. The pipeline is designed to be scalable and reusable for future applications.
-
----
-
-###
+This project sets up a full DevOps pipeline to deploy a Python Flask application on Kubernetes using AWS EKS. Jenkins handles the CI/CD workflow, Terraform provisions cloud infrastructure, and Docker manages container builds. This system supports automation, scalability, and repeatability for cloud-native deployments.
