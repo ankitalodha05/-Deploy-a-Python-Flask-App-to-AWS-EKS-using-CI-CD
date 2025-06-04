@@ -87,7 +87,27 @@ sudo systemctl start jenkins
 sudo systemctl status jenkins
 ```
 
-This script installs Docker, Java 17 (required by Jenkins), and Jenkins itself, and ensures that the Jenkins service starts on boot.
+This script installs Java 17 (required by Jenkins), and Jenkins itself, and ensures that the Jenkins service starts on boot.
+
+tools Installation
+
+A Jenkins server was provisioned on an Ubuntu EC2 instance. After launching the instance, we uploaded and executed a shell script named install_dev_tools.sh. This script installs all required tools and dependencies for Jenkins-based DevOps automation.
+
+Tools installed by the script:
+
+
+Docker
+
+Terraform
+
+AWS CLI
+
+kubectl
+
+eksctl
+
+
+Note: The install_dev_tools.sh script ensures Jenkins has all necessary tools to perform provisioning, image building, EKS management, and deployment. You can reuse this script for consistent setup in other environments.
 
 Additionally, an **IAM role with AdministratorAccess** was created and attached to the Jenkins EC2 instance. This allows Jenkins to execute AWS CLI and Terraform commands without additional access configuration.
 
