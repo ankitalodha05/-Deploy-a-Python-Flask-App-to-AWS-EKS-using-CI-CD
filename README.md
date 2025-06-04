@@ -1,3 +1,4 @@
+![image](https://github.com/user-attachments/assets/7db4c975-19e3-48bf-a550-9ede570e532a)
 # CI/CD Pipeline for Flask App Deployment on AWS EKS using Jenkins, Terraform, and Docker
 
 ---
