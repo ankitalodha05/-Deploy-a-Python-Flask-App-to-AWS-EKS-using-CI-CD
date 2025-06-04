@@ -54,6 +54,8 @@ This project automates the full lifecycle of deploying a Python Flask applicatio
 
 This setup allows the Flask application to persist and query data from the RDS database.
 
+---
+
 ### **Jenkins Server Installation via User Data Script**
 
 A Jenkins server was provisioned using the following user data script on an Ubuntu EC2 instance:
@@ -89,11 +91,13 @@ sudo systemctl status jenkins
 
 This script installs Java 17 (required by Jenkins), and Jenkins itself, and ensures that the Jenkins service starts on boot.
 
-tools Installation
+---
+
+### Devops tools Installation
 
 A Jenkins server was provisioned on an Ubuntu EC2 instance. After launching the instance, we uploaded and executed a shell script named install_dev_tools.sh. This script installs all required tools and dependencies for Jenkins-based DevOps automation.
 
-### Devops Tools installed by the script:
+Tools installed by the script:
 
 
 Docker
@@ -109,7 +113,11 @@ eksctl
 
 Note: The install_dev_tools.sh script ensures Jenkins has all necessary tools to perform provisioning, image building, EKS management, and deployment. You can reuse this script for consistent setup in other environments.
 
-Additionally, an **IAM role with AdministratorAccess** was created and attached to the Jenkins EC2 instance. This allows Jenkins to execute AWS CLI and Terraform commands without additional access configuration.
+---
+
+### Additionally, 
+
+An **IAM role with AdministratorAccess** was created and attached to the Jenkins EC2 instance. This allows Jenkins to execute AWS CLI and Terraform commands without additional access configuration.
 
 ---
 
