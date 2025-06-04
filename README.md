@@ -41,7 +41,70 @@ This project automates the full lifecycle of deploying a Python Flask applicatio
 
 ---
 
-### **Pipeline Stages (Detailed)**
+### **Jenkins Docker and SSH Key Setup (Detailed)**
+
+#### 1. **Grant Docker Access to Jenkins User**
+
+```bash
+sudo usermod -aG docker jenkins
+```
+
+* Adds `jenkins` user to the `docker` group so it can run Docker commands without `sudo`.
+
+#### 2. **Reload Jenkins User Session**
+
+```bash
+sudo su - jenkins
+```
+
+* Re-login to apply group membership changes.
+
+#### 3. **Test Docker Access**
+
+```bash
+docker ps
+```
+
+* Should not return a "permission denied" error.
+
+#### 4. **Generate SSH Key Pair for Jenkins User**
+
+```bash
+ssh-keygen -t rsa -b 4096 -f ~/.ssh/id_rsa -N ""
+```
+
+* Creates a 4096-bit RSA key.
+* No passphrase (`-N ""`) to allow automation.
+
+#### 5. **Set Proper SSH Permissions**
+
+```bash
+chmod 700 ~/.ssh
+chmod 600 ~/.ssh/id_rsa
+chmod 644 ~/.ssh/id_rsa.pub
+```
+
+* Correct file permissions to allow SSH to use these keys securely.
+
+#### 6. **Verify Key Presence**
+
+```bash
+ls /var/lib/jenkins/.ssh
+```
+
+* You should see:
+
+  * `id_rsa` (private key)
+  * `id_rsa.pub` (public key)
+
+#### 7. **Use Case**
+
+* This setup is used when Jenkins needs to SSH into remote servers (e.g., EC2, Git server, or other agents).
+* Common for GitOps, deployment, or remote execution steps.
+
+---
+
+### **CI/CD Pipeline Stages**
 
 1. **Checkout Source Code**
 
@@ -55,41 +118,21 @@ This project automates the full lifecycle of deploying a Python Flask applicatio
 
    * Uses `deleteDir()` in Jenkins to ensure a clean build environment.
 
-3. **Terraform Initialization and Apply**
+3. **Terraform Init & Apply**
 
-   * `terraform init` initializes Terraform providers and backends.
-   * `terraform apply -auto-approve` provisions:
-
-     * A VPC with 4 subnets (2 public, 2 private)
-     * Route tables, NAT gateway, and Internet gateway
-     * IAM roles for EKS cluster and nodes
-     * ECR repository
-     * EKS cluster with managed node group
-     * Configures kubeconfig and aws-auth
+   * Provisions full AWS infrastructure using IaC.
 
 4. **Fetch ECR URI**
 
-   * Extracts output `ecr_repository_url` using:
+   * Uses Terraform output to retrieve ECR image repository.
 
-     ```bash
-     terraform output -raw ecr_repository_url
-     ```
+5. **Docker Build & Push**
 
-5. **Docker Image Build & Push**
-
-   * Jenkins builds image using Dockerfile in `flaskapp/`.
-   * Tags the image with the ECR repository URL.
-   * Logs into ECR using AWS CLI and pushes the image.
+   * Jenkins builds Docker image for Flask app and pushes to ECR.
 
 6. **Deploy to EKS**
 
-   * Copies `deployment-template.yaml` to `deployment.yaml`
-   * Replaces placeholder with actual ECR image URI using `sed`
-   * Deploys using `kubectl apply -f deployment.yaml` and `service.yaml`
-
-7. **Post Actions**
-
-   * Pipeline logs completion message on successful deployment.
+   * Jenkins uses `kubectl` to deploy the application to the Kubernetes cluster.
 
 ---
 
@@ -117,15 +160,6 @@ Flask-App-to-AWS-EKS/
 ├── service.yaml
 └── Jenkinsfile
 ```
-
----
-
-### **Key Configuration Details**
-
-* **Cluster Name**: `my-flask-cluster`
-* **Node Group Name**: `my-flask-cluster-nodegroup`
-* **Docker Image Name**: `my-flask-repo:latest`
-* **ECR URI**: `160885291806.dkr.ecr.ap-south-1.amazonaws.com/my-flask-repo`
 
 ---
 
@@ -166,4 +200,4 @@ Flask-App-to-AWS-EKS/
 
 ### **Conclusion**
 
-This project sets up a full DevOps pipeline to deploy a Python Flask application on Kubernetes using AWS EKS. Jenkins handles the CI/CD workflow, Terraform provisions cloud infrastructure, and Docker manages container builds. This system supports automation, scalability, and repeatability for cloud-native deployments.
+This project sets up a full DevOps pipeline to deploy a Python Flask application on Kubernetes using AWS EKS. Jenkins handles the CI/CD workflow, Terraform provisions cloud infrastructure, and Docker manages container builds. The SSH and Docker permissions setup ensures secure and seamless build operations for Jenkins in a production-ready environment.
