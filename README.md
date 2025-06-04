@@ -169,12 +169,24 @@ ls /var/lib/jenkins/.ssh
 
 ### **Jenkins Project Setup**
 
-* After setting up the Jenkins server, logged into the Jenkins Dashboard.
-* Created a new project named **`project1`**.
-* Selected **Pipeline** project type.
-* Configured the pipeline to use **Pipeline script from SCM**.
-* Connected the pipeline to a GitHub repository containing the `Jenkinsfile` and project code.
-* Triggered the initial build which executed the entire CI/CD pipeline.
+
+After setting up the Jenkins server, logged into the Jenkins Dashboard.
+
+Created a new project named project1.
+
+Selected Pipeline project type.
+
+Configured the pipeline to use Pipeline script from SCM.
+
+Connected the pipeline to a GitHub repository containing the Jenkinsfile and project code.
+
+Triggered the initial build which executed the entire CI/CD pipeline.
+
+✅ Once the Jenkins pipeline finishes successfully, it provisions all infrastructure, builds and pushes the Docker image to ECR, and deploys the Flask application to the EKS cluster.
+
+🌐 An AWS Load Balancer is automatically created by the Kubernetes service. Copy the DNS name of the load balancer from the AWS console and open it in your browser to access the deployed Flask application.
+
+
 
 ---
 
