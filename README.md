@@ -208,7 +208,7 @@ Triggered the initial build which executed the entire CI/CD pipeline.
 ### **Directory Structure**
 
 ```plaintext
-Flask-App-to-AWS-EKS/
+-Deploy-a-Python-Flask-App-to-AWS-EKS-using-CI-CD/
 │
 ├── terraform/
 │   ├── main.tf
@@ -225,9 +225,13 @@ Flask-App-to-AWS-EKS/
 │   ├── Dockerfile
 │   └── requirements.txt
 │
-├── deployment-template.yaml
+├── deployment-template.yaml 
 ├── service.yaml
 └── Jenkinsfile
+└── install_dev_tools.sh
+└── screenshot.md
+└── code.sql
+└── install_dev_tools.sh
 ```
 
 ---
