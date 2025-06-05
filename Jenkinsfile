@@ -16,13 +16,13 @@ pipeline {
 
         stage('Git Clone') {
             steps {
-                sh 'git clone --branch main https://github.com/ankitalodha05/Flask-App-to-AWS-EKS.git'
+                sh 'git clone --branch main https://github.com/ankitalodha05/-Deploy-a-Python-Flask-App-to-AWS-EKS-using-CI-CD'
             }
         }
 
         stage('Terraform Init & Apply') {
             steps {
-                dir('Flask-App-to-AWS-EKS/terraform') {
+                dir('-Deploy-a-Python-Flask-App-to-AWS-EKS-using-CI-CD/terraform') {
                     sh 'terraform init'
                     sh 'terraform apply -auto-approve'
                 }
@@ -31,7 +31,7 @@ pipeline {
 
         stage('Get ECR URI') {
             steps {
-                dir('Flask-App-to-AWS-EKS/terraform') {
+                dir('-Deploy-a-Python-Flask-App-to-AWS-EKS-using-CI-CD') {
                     script {
                         def ecrUri = sh(
                             script: "terraform output -raw ecr_repository_url",
@@ -48,7 +48,7 @@ pipeline {
 
         stage('Docker Build & Push') {
             steps {
-                dir('Flask-App-to-AWS-EKS/flaskapp') {
+                dir('-Deploy-a-Python-Flask-App-to-AWS-EKS-using-CI-CD/flaskapp') {
                     script {
                         def ecrUri = readFile("${env.WORKSPACE}/ecr_uri.txt").trim()
                         echo "Using ECR URI: ${ecrUri}"
@@ -64,7 +64,7 @@ pipeline {
 
         stage('Deploy to EKS') {
             steps {
-                dir('Flask-App-to-AWS-EKS') {
+                dir('-Deploy-a-Python-Flask-App-to-AWS-EKS-using-CI-CD') {
                     script {
                         def ecrUri = readFile("${env.WORKSPACE}/ecr_uri.txt").trim()
                         sh """
