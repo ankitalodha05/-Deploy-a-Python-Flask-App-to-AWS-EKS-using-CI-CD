@@ -55,6 +55,7 @@ This project automates the full lifecycle of deploying a Python Flask applicatio
 
 This setup allows the Flask application to persist and query data from the RDS database.
 
+![image](https://github.com/user-attachments/assets/ed6edaa6-7ee4-4d96-9069-06901cca346e)
 ---
 
 ### **Jenkins Server Installation via User Data Script**
@@ -187,6 +188,21 @@ Triggered the initial build which executed the entire CI/CD pipeline.
 
 🌐 An AWS Load Balancer is automatically created by the Kubernetes service. Copy the DNS name of the load balancer from the AWS console and open it in your browser to access the deployed Flask application.
 
+![image](https://github.com/user-attachments/assets/0ceecfe8-1a84-48f9-b2db-ea6f685c51b7)
+![image](https://github.com/user-attachments/assets/ae86b4fd-54cf-4208-9664-0f9921f77c12)
+![image](https://github.com/user-attachments/assets/bb17d15e-c354-4edd-ae61-0194e62c7393)
+![image](https://github.com/user-attachments/assets/63086fac-6c32-4319-98d9-121059ac9b11)
+![image](https://github.com/user-attachments/assets/ffd7ed4c-36b7-497c-ad4f-41ff60608874)
+![image](https://github.com/user-attachments/assets/94635ce6-7fb1-48f9-b703-a308a7b930ba)
+![image](https://github.com/user-attachments/assets/ed6edaa6-7ee4-4d96-9069-06901cca346e)
+![image](https://github.com/user-attachments/assets/4171458c-b173-4141-90d8-cdff1b2a32fb)
+![image](https://github.com/user-attachments/assets/8b24b639-9d2e-48f1-9157-c4394f738e19)
+![image](https://github.com/user-attachments/assets/4198044a-fac0-4883-8860-57f491c568eb)
+![image](https://github.com/user-attachments/assets/a3407f9c-086b-4c87-a907-c33b236c517d)
+
+![image](https://github.com/user-attachments/assets/0b350a25-cf9a-421a-8d06-8bd16b1fa8e3)
+
+![image](https://github.com/user-attachments/assets/0ceecfe8-1a84-48f9-b2db-ea6f685c51b7)
 
 
 ---
