@@ -1,5 +1,6 @@
 # CI/CD Pipeline for Flask App Deployment on AWS EKS using Jenkins, Terraform, and Docker
 
+![image](https://github.com/user-attachments/assets/0ceecfe8-1a84-48f9-b2db-ea6f685c51b7)
 ---
 
 ### **Overview**
